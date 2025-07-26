@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 
-const toggleSubscription = asyncHandler(async (req, res) => {
+export const toggleSubscription = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
   const userId = req.user._id;
   const user = User.findById(userId);
@@ -70,4 +70,30 @@ export const getUserChannelSubscribers = asyncHandler(async(req,res) =>{
     .json(
         new ApiResponse(200,{count : subscribers.length,subscribers},"Subscribers fetched successfully")
     )
+})
+
+export const getSubscribedChannels = asyncHandler(async(req,res) =>{
+    const {subscribedId} = req.params
+
+    if(!mongoose.Types.ObjectId.isValid(subscribedId)){
+        throw new ApiError(400, "Invalid subscribed id");
+    }
+
+    const subscription = await Subscription.find({subscriber: subscribedId})
+    .populate("channel","username avatar ")
+    .sort({createdAt : -1})
+
+    const channels = subscription.map((sub) => sub.channel)
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{
+            count: channels.length,
+            channels
+        },
+    "subscribed channels fetched successfully")
+    )
+
+
 })
