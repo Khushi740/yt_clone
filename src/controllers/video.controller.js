@@ -149,3 +149,21 @@ export const publishVideo = asyncHandler(async(req,res)=>{
     .status(200)
     .json(new ApiResponse(200, video, "video published successfully"))
 })
+
+
+export const getVideoById = asyncHandler(async(req,res)=>{
+    const {videoId} = req.params;
+
+    if(!videoId?.trim()){
+        throw new ApiError(400, "videoId is reuired")
+    }
+
+    const video = await Video.findById(videoId);
+
+    if(!video){
+        throw new ApiError(404, "video not found")
+    }
+
+    return res.status(200)
+    .json(new ApiResponse(200,video,"video fetched successfully"))
+})
