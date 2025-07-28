@@ -167,3 +167,94 @@ export const getVideoById = asyncHandler(async(req,res)=>{
     return res.status(200)
     .json(new ApiResponse(200,video,"video fetched successfully"))
 })
+
+
+export const updateVideo = asyncHandler(async(req,res)=>{
+    const {videoId} = req.params;
+    const {title,description} = req.body;
+    const thumbnailLocalpath = req.file?.path;
+    const userId = req.user._id
+
+    if(!title && !description && !thumbnailLocalpath){
+        throw new ApiError(400,"Atleast one field is required")
+    }
+
+    const video = await Video.findById(videoId);
+
+    if(!video){
+        throw new ApiError(404, "video witth this id  is not found")
+    }
+
+    if(video.owner.toString() !== userId.toString()){
+        throw new ApiError(403, "unauthorized to update this video")
+    }
+
+    const updateFields = {};
+
+    if(title) updateFields.title = title;
+    if(description) updateFields.description = description;
+    if(thumbnailLocalpath){
+        const Thumbnail = await uploadOnCloudinary(thumbnailLocalpath);
+        if(!Thumbnail){
+            throw new ApiError(500, "error while uploading new thumbnail")
+        }
+
+        updateFields.thumbnail = Thumbnail
+    }
+
+     const updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { $set: updateFields },
+        { new: true }
+    );
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, updatedVideo, "Video updated successfully"));
+})
+
+
+export const deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    if (!videoId || videoId.trim() === "") {
+        throw new ApiError(400, "videoId is required");
+    }
+
+    const video = await Video.findByIdAndDelete(videoId);
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, video, "Video deleted successfully"));
+});
+
+
+export const togglePublishStatus = asyncHandler(async(req,res)=>{
+    const {videoId} = req.params;
+
+    const userId = req.user._id;
+
+    const video = await Video.findById(videoId);
+
+    if(!video){
+        throw new ApiError(404, "video not found")
+    }
+
+    if(video.owner.toString() !== userId.toString() ){
+        throw new ApiError(403, "Unauthorized to update publish status")
+    }
+
+    video.isPublished = !video.isPublished;
+
+    await video.save({validateBeforeSave: false})
+
+    return res.status(200)
+    .json(new ApiResponse(200,video,
+        `Video ${video.isPublished ? "published" : "unpublished"}`
+    ))
+
+})
