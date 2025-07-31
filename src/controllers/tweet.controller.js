@@ -31,7 +31,7 @@ export const getUserTweets = asyncHandler(async(req,res) =>{
         throw new ApiError(400, "user id is required")
     }
 
-    if(isValidObjectId(userId)){
+    if(!isValidObjectId(userId)){
         throw new ApiError(400,"invalid user")
     }
 
@@ -109,4 +109,26 @@ export const updateTweet = asyncHandler(async(req,res) =>{
 
     return res.status(200)
     .json(new ApiResponse(200,tweet,"tweet updated successfully"))
+})
+
+
+export const deleteTweet = asyncHandler(async(req,res) =>{
+    const {tweetId} = req.params;
+
+    if(!tweetId.trim()){
+        throw new ApiError(400,"Tweet id is required")
+    }
+
+    if(!isValidObjectId(tweetId)){
+        throw new ApiError(400,"Invalid tweet id")
+    }
+
+    const tweet = await Tweet.findByIdAndDelete(tweetId)
+
+    if(!tweet){
+        throw new ApiError(400, "tweet not found")
+    }
+
+    return res.status(200)
+    .json(new ApiResponse(200,tweet,"tweet deleted successfully"))
 })
