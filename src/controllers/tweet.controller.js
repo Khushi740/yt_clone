@@ -24,7 +24,7 @@ export const createTweet = asyncHandler(async(req,res) =>{
 })
 
 
-export const getUserTwweets = asyncHandler(async(req,res) =>{
+export const getUserTweets = asyncHandler(async(req,res) =>{
     const {userId} = req.params;
     
     if(!userId?.trim()){
@@ -74,4 +74,39 @@ export const getUserTwweets = asyncHandler(async(req,res) =>{
 
     return res.status(200)
     .json(new ApiResponse(200,user,"user tweets fetched successfully"))
+})
+
+
+export const updateTweet = asyncHandler(async(req,res) =>{
+    const {tweetId} = req.params;
+
+    const {content} = req.body;
+
+    if(!tweetId.trim()){
+        throw new ApiError(400, "tweet id is required")
+    }
+
+    if(!isValidObjectId(tweetId)){
+        throw new ApiError(400, "invalid tweet id")
+    }
+
+    if(!content?.trim()){
+        throw new ApiError(400,"content is required")
+    }
+
+    const tweet = await Tweet.findByIdAndUpdate(
+        tweetId,
+        {
+            content: content,
+        },{
+            new: true
+        }
+    )
+
+    if(!tweet){
+        throw new ApiError(404,"Tweet not found")
+    }
+
+    return res.status(200)
+    .json(new ApiResponse(200,tweet,"tweet updated successfully"))
 })
