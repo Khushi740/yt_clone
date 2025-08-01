@@ -1,4 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose";
+import { Types } from "mongoose";
 import { Tweet } from "../models/tweet.model";
 import { User } from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
@@ -38,7 +39,7 @@ export const getUserTweets = asyncHandler(async(req,res) =>{
     const user = await User.aggregate([
         {
             $match : {
-                _id: new mongoose.Types.ObjectId(userId)
+                _id: Types.ObjectId(userId)
             }
         },
         {
